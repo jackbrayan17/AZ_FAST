@@ -14,36 +14,39 @@ class LoginController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-        $credentials = $request->only('email', 'password');
+    $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            \Log::info('User logged in: ', ['email' => $user->email, 'role' => $user->role->name]);
-            // Redirect based on user roles
-            switch ($user->role->name) {
-                case 'Super Admin':
-                    return redirect()->route('superadmin.dashboard');
-                case 'Admin':
-                    return redirect()->route('admin.dashboard');
-                case 'Storekeeper':
-                    return redirect()->route('storekeeper.dashboard');
-                case 'Courier':
-                    return redirect()->route('courier.dashboard');
-                case 'Client':
-                    return redirect()->route('client.dashboard');
-                default:
-                    return redirect()->route('login');
-            }
+    if (Auth::attempt($credentials)) {
+        $user = Auth::user();
+
+        // Log the user details for debugging
+        \Log::info('User logged in: ', ['user' => $user]);
+
+        // Check roles for redirection
+        if ($user->hasRole('Super Admin')) {
+            return redirect()->route('superadmin.dashboard');
+        } elseif ($user->hasRole('Admin')) {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->hasRole('Storekeeper')) {
+            return redirect()->route('storekeeper.dashboard');
+        } elseif ($user->hasRole('Courier')) {
+            return redirect()->route('courier.dashboard');
+        } elseif ($user->hasRole('Client')) {
+            return redirect()->route('client.dashboard');
+        } else {
+            return redirect()->route('login');
         }
-
-        return redirect()->back()->withErrors(['error' => 'Invalid credentials']);
     }
+
+    return redirect()->back()->withErrors(['error' => 'Invalid credentials']);
+}
+
 
     public function logout(Request $request)
     {

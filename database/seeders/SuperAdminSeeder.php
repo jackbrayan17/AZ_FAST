@@ -4,27 +4,37 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Role;
+use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class SuperAdminSeeder extends Seeder
 {
     public function run()
     {
-        // Find the Super Admin role
-        $role = Role::where('name', 'Super Admin')->first();
+        // Find or create the Super Admin role
+        $role = Role::firstOrCreate(
+            ['name' => 'Super Admin'], 
+            ['guard_name' => 'web']
+        );
 
-        // Create the Super Admin user
-        User::create([
-            'name' => 'Super Admin',
-            'username' => 'superadmin', // Add this line
-            'phone' => '123456789',
-            'email' => 'superadmin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'super_admin', // Assign Super Admin role
-            'role_id' => 1, // Ensure this corresponds to an existing role ID
-            'created_at' => now(),
-            'updated_at' => now(),
+        // Create the Super Admin user if not exists
+        $user = User::firstOrCreate(
+            ['email' => 'superadmin@example.com'],
+            [
+                'name' => 'Super Admin',
+                'username' => 'superadmin',
+                'phone' => '123456789',
+                'password' => '0000', // Hash the password
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        DB::table('model_has_roles')->insert([
+            'role_id' => $role->id,
+            'model_id' => $user->id,
+            'model_type' => 'App\Models\User',  // Explicitly specify the model type
         ]);
     }
 }

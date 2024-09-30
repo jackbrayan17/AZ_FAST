@@ -15,5 +15,7 @@
     
         <button type="submit">Login</button>
     </form>
+    Register as a client : <a href="{{ route('client.register.form') }}" class="btn-primary">Register</a>
+    
  </body>
 </html>

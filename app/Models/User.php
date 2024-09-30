@@ -54,25 +54,23 @@ class User extends Authenticatable
     }
 
     /**
-     * Define the relationship with the Role model.
-     * Since the Spatie package handles roles and permissions,
-     * this relation is optional and can be used for customization.
+     * Define a relationship with roles.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles()
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(Role::class, 'model_has_roles', 'model_id', 'role_id')
+                    ->where('model_type', self::class); // This sets the model_type correctly
     }
 
     /**
-     * Assign a specific role to the user.
+     * Define a relationship with KYC.
      *
-     * @param string $role
-     * @return \Illuminate\Database\Eloquent\Model
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function assignRoleToUser($role)
+    public function kyc()
     {
-        return $this->assignRole($role); // Using spatie's assignRole method
+        return $this->hasOne(KYC::class);
     }
 }
