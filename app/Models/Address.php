@@ -9,12 +9,14 @@ class Address extends Model
     use HasFactory;
 
     protected $fillable = [
+        'country',
         'town',
         'quarter',
-        'fees',
-        'longitude',
         'latitude',
+        'longitude',
+        'fees',
     ];
+
 
     // Define the relationship with the User model if needed
     public function users()

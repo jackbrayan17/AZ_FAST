@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Courier extends Model
+class Courier extends User
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
         'id_number',
+        'name',
         'vehicle_brand',
         'vehicle_registration_number',
         'vehicle_color',
@@ -19,6 +20,11 @@ class Courier extends Model
         'city',
         'neighborhood',
     ];
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
 
     public function user()
     {

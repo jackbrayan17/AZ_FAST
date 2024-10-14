@@ -4,31 +4,56 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\Address;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class ClientController extends Controller
 {
+    public function trackOrder($orderId)
+    {
+        $order = Order::findOrFail($orderId);
+        $senderQuarter = $order->sender_quarter; // Assuming this is stored in the Order model
+        $receiverQuarter = $order->receiver_quarter; // Assuming this is stored in the Order model
+        $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
+        $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
+        $courier = auth()->user(); // Assuming the courier is linked to the order
+    
+        return view('client.orders.track', [
+            'senderLatitude' => $senderAddress->latitude,
+            'senderLongitude' => $senderAddress->longitude,
+            'receiverLatitude' => $receiverAddress->latitude,
+            'receiverLongitude' => $receiverAddress->longitude,
+        ]);
+    }
     public function showUpgradeForm()
 {
     return view('client.upgrade');
 }
-
+public function products()
+{
+    $products = Product::all(); // Fetch all products
+    return view('client.products.index', compact('products')); // Return the view with products
+}
     public function upgradeToMerchant(Request $request)
     {
         $request->validate([
             'payment_method' => 'required|string',
             'phone' => 'required|string|max:15',
         ]);
-    
-        // Simulate payment processing
-        // In a real application, you'd interact with a payment API here.
-        
-        // Assuming the payment is successful, proceed to upgrade the client
         $client = auth()->user();
+        $wallet = $client->wallet;
+
+        if (!$wallet || $wallet->balance < 1000) {
+            return redirect()->back()->with('error', 'Solde insuffisant dans votre portefeuille pour effectuer cette opération.');
+        }
     
-        // Upgrade the client to Merchant Client using DB facade
+        $wallet->balance -= 1000;
+        $wallet->save();
         DB::table('model_has_roles')->insert([
             'role_id' => DB::table('roles')->where('name', 'Merchant Client')->value('id'),
             'model_id' => $client->id,
@@ -37,12 +62,24 @@ class ClientController extends Controller
     
         return redirect()->route('merchant.dashboard')->with('success', 'Vous êtes maintenant un Merchant Client!');
     }
-    // Display the client registration form
     public function showRegisterForm()
     {
         return view('client.register'); // Assuming the form view is in 'resources/views/client/register.blade.php'
     }
+    public function clientOrder(){
+        $client = auth()->user();
 
+        // Fetch orders for the authenticated client
+        $orders = Order::where('client_id', $client->id)->get(['id','product_info','sender_quarter','receiver_quarter','verification_code','status']);
+
+        return view('client.orders.index', compact('orders'));
+     }
+    
+    public function dashboard()
+    {
+        $users = User::with('roles')->get();
+        return view('client.dashboard', compact('users')); // Assuming you have a 'client/dashboard.blade.php' view
+    }
     // Handle client registration
     public function register(Request $request)
     {
@@ -52,6 +89,7 @@ class ClientController extends Controller
             'email' => 'required|email|unique:users',
             'phone' => 'required|string|max:15',
             'password' => 'required|string|min:4|confirmed',
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Create the client (user) record
@@ -60,8 +98,34 @@ class ClientController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => $request->password,
+            'role' => 'client'
         ]);
 
+        if ($request->hasFile('profile_image')) {
+            $file = $request->file('profile_image');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('uploads/profile_images', $fileName, 'public');
+    
+            // If user already has a profile image, update it
+            if ($user->profileImage) {
+                // Delete the previous image file if needed
+                Storage::disk('public')->delete($user->profileImage->image_path);
+    
+                // Update the existing image record
+                $user->profileImage->update([
+                    'image_path' => $filePath,
+                ]);
+            } else {
+                // Create a new profile image if none exists
+                $user->profileImage()->create([
+                    'image_path' => $filePath,
+                ]);
+            }
+        }
+
+        $client->wallet()->create([
+            'balance' => 0.00,  // Initial balance
+        ]);
         // Fetch the Client role
         $role = Role::where('name', 'Client')->first();
 
@@ -73,13 +137,46 @@ class ClientController extends Controller
         ]);
 
         // Redirect to a success page or client dashboard
+        return redirect()->route('login')->with('success', 'Client registered successfully');
+    }
+    public function editImage()
+    {
+        return view('profile.edit');
+    }
+    public function updateImage(Request $request)
+    {
+        $request->validate([
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image file
+        ]);
+    
+        $user = auth()->user();
+    
+        // Check if an image is uploaded
+        if ($request->hasFile('profile_image')) {
+            $file = $request->file('profile_image');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $filePath = $file->storeAs('uploads/profile_images', $fileName, 'public');
+    
+            // If user already has a profile image, update it
+            if ($user->profileImage) {
+                // Delete the previous image file if needed
+                Storage::disk('public')->delete($user->profileImage->image_path);
+    
+                // Update the existing image record
+                $user->profileImage->update([
+                    'image_path' => $filePath,
+                ]);
+            } else {
+                // Create a new profile image if none exists
+                $user->profileImage()->create([
+                    'image_path' => $filePath,
+                ]);
+            }
+        }
+
         return redirect()->route('client.dashboard')->with('success', 'Client registered successfully');
     }
-
+    
     // Display the client dashboard after registration (optional)
-    public function dashboard()
-    {
-        $users = User::with('roles')->get();
-        return view('client.dashboard', compact('users')); // Assuming you have a 'client/dashboard.blade.php' view
-    }
+   
 }

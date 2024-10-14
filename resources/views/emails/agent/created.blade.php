@@ -1,12 +1,17 @@
-@component('mail::message')
-# New Agent Created
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Storekeeper Account Credentials</title>
+</head>
+<body>
+    <h1>Welcome, {{ $user->name }}</h1>
+    <p>You have been registered as a storekeeper. Here are your account details:</p>
 
-A new agent has been created.
+    <p><strong>Email:</strong> {{ $user->email }}</p>
+    <p><strong>Password:</strong> {{ $password }}</p>
 
-**Name:** {{ $agent->name }}  
-**Email:** {{ $agent->email }}  
-**Role:** {{ $agent->role }}
+    <p>Please log in using these credentials and change your password after logging in.</p>
 
-Thanks,  
-{{ config('app.name') }}
-@endcomponent
+    <p>Thank you!</p>
+</body>
+</html>

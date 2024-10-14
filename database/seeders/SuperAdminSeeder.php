@@ -25,7 +25,9 @@ class SuperAdminSeeder extends Seeder
                 'name' => 'Super Admin',
                 'username' => 'superadmin',
                 'phone' => '123456789',
-                'password' => '0000', // Hash the password
+                'password' => '0000', 
+                'role' => 'super_admin', 
+                
                 'created_at' => now(),
                 'updated_at' => now(),
             ]

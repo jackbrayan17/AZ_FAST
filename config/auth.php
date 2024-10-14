@@ -40,8 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+    'courier' => [
+        'driver' => 'session',
+        'provider' => 'couriers',
     ],
-
+    ],
+    
     /*
     |--------------------------------------------------------------------------
     | User Providers
@@ -64,7 +68,10 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],
-
+        'couriers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Courier::class, // Adjust the path if necessary
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',

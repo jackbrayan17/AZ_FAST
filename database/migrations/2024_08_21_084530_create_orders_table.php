@@ -13,13 +13,22 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('client_id')->constrained()->onDelete('cascade');
-            $table->json('products'); // Store product_id and quantity in JSON
-            $table->float('total_price');
-            $table->string('payment_status');
-            $table->string('delivery_status');
-            $table->foreignId('delivery_address_id')->constrained('addresses')->onDelete('cascade');
-            $table->string('qr_code')->nullable();
+            $table->string('sender_name');
+            $table->string('sender_phone');
+            $table->string('sender_town');
+            $table->string('sender_quarter');
+            $table->string('receiver_name');
+            $table->string('receiver_phone');
+            $table->string('receiver_town');
+            $table->string('receiver_quarter');
+            $table->string('product_info');
+            $table->string('category');
+            $table->decimal('price', 10, 2);
+            $table->string('payment');
+            $table->string('status')->default('Pending');
+            $table->foreignId('sender_address_id')->nullable()->constrained('addresses')->onDelete('cascade');
+            $table->foreignId('receiver_address_id')->nullable()->constrained('addresses')->onDelete('cascade');
+    
             $table->timestamps();
         });
         

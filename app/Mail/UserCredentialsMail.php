@@ -21,7 +21,7 @@ class UserCredentialsMail extends Mailable
 
     public function build()
     {
-        return $this->view('emails.user_credentials')
+        return $this->view('emails.agent.created')
             ->with([
                 'name' => $this->user->name,
                 'email' => $this->user->email,
