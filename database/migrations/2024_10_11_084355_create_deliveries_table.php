@@ -14,6 +14,8 @@ class CreateDeliveriesTable extends Migration
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->foreignId('merchant_id')->constrained()->onDelete('cascade');
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
+            $table->timestamp('start_time')->nullable();
+            $table->timestamp('end_time')->nullable();
             $table->enum('status', ['Pending', 'Delivered', 'Cancelled'])->default('Pending');
             $table->timestamps();
         });
