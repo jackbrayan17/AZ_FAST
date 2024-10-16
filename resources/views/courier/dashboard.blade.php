@@ -66,7 +66,7 @@
                         <td class="border border-gray-300 px-4 py-2">{{ $order->receiver_quarter ?? 'N/A' }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $order->product_info ?? 'N/A' }}</td>
                         <td class="border border-gray-300 px-4 py-2">
-                            <a href="{{ route('deliveries.start', $order->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Démarrer la Livraison</a>
+                            <a href="{{ route('deliveries.start', $order->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Track</a>
                         </td>
                     </tr>
                 @endforeach

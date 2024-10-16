@@ -24,9 +24,22 @@
     <main>
         @yield('content')
     </main>
-    <footer>
-        <p>&copy; {{ date('Y') }} AZ Fast.</p>
+    <footer class="bg-gray-800 text-white mt-10 py-6">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left">
+                    <h2 class="text-lg font-semibold">Contact Information</h2>
+                    <p class="mt-2">Eyoum Atock J-J Brayan</p>
+                    <p class="mt-1">Email: <a href="mailto:its.jackbrayan17@gmail.com" class="text-blue-400 hover:underline">its.jackbrayan17@gmail.com</a></p>
+                    <p class="mt-1">Phone: <a href="tel:+237657757036" class="text-blue-400 hover:underline">+237 657 757 036</a></p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <p class="text-sm">&copy;2025 Eyoum Atock J-J Brayan. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
     </footer>
+    
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>    
     
 </body>

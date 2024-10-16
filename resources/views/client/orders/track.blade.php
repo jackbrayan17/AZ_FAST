@@ -30,10 +30,10 @@
 </header>
     <div id="map" style="height: 500px;"></div>
     <div id="courier-info" class="mt-4">
-        <h2>Courier Position</h2>
-        <p id="address-name">Address: N/A</p>
-        <p id="coordinates">Coordinates: N/A</p>
-        <p id="distance-info">Distance: N/A</p>
+        <h2><b>Courier Position</b></h2>
+        <p id="address-name"><b>Address:</b> N/A</p>
+        <p id="coordinates"><b>Coordinates:</b> N/A</p>
+        {{-- <p id="distance-info"><b>Distance:</b> N/A</p> --}}
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

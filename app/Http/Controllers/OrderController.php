@@ -43,7 +43,7 @@ class OrderController extends Controller
             'receiver_quarter' => 'required|string|max:100',
             'product_id' => 'required|exists:products,id',
             'category_id' => 'required|exists:categories,id',
-            'product_price' => 'required|exists:products,price',
+            'product_price' => 'required|numeric|exists:products,price',
             'payment' => 'required|string',
             'payment_number' => 'required|string',
             'merchant_id' => 'required|integer|exists:merchants,id',

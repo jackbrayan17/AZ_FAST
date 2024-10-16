@@ -18,28 +18,21 @@ class CourierController extends Controller
     public function trackOrder($orderId)
     {
         $order = Order::findOrFail($orderId);
-        $senderQuarter = $order->sender_quarter; // Assuming this is stored in the Order model
-        $receiverQuarter = $order->receiver_quarter; // Assuming this is stored in the Order model
+        $senderQuarter = $order->sender_quarter; 
+        $receiverQuarter = $order->receiver_quarter;
         $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
         $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
-        
-        // Get the authenticated courier
-        //$courier = auth()->user();
         $user = request()->user();
         $courierId = $user ? $user->id : null; 
-        // $user = Auth::user(); 
-        // $courierId = $user->id;
-        
-        $clientId = $order->client_id; // Assuming the Order model has a client_id field
+        $clientId = $order->client_id; 
         $merchantId = $order->merchant_id;
-        
         $delivery = new Delivery();
         $delivery->courier_id = $courierId;
         $delivery->client_id = $clientId;
         $delivery->merchant_id = $merchantId;
         $delivery->order_id = $order->id;
         $delivery->status = 'pending';
-       // $delivery->save();
+        // $delivery->save();
 
         return view('courier.orders.track', [
             'senderLatitude' => $senderAddress->latitude,
@@ -57,8 +50,6 @@ class CourierController extends Controller
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
-    
-        // Save the courier's location to the database
         CourierLocation::create([
             'courier_id' => $request->courier_id,
             'latitude' => $request->latitude,
@@ -67,7 +58,6 @@ class CourierController extends Controller
     
         return response()->json(['message' => 'Location updated successfully.']);
     }
-    // List all couriers
     public function index()
     { 
         $couriers = Courier::with('user')->get();
