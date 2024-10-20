@@ -26,6 +26,11 @@ class Order extends Model
         'payment_number',
         'status',
         'client_id',
+        'courier_id',          // Reference to courier
+        'verification_code',
+        'courier_longitude',   // Courier's longitude
+        'courier_latitude',    // Courier's latitude
+        'courier_address_name', 
         'merchant_id', // Ensure this is included
         'sender_address_id',  // Reference to sender address
         'receiver_address_id' // Reference to receiver address
@@ -49,7 +54,14 @@ class Order extends Model
     {
         return $this->belongsToMany(Product::class)->withPivot('quantity');
     }
-
+    public function merchant()
+    {
+        return $this->belongsTo(Merchant::class, 'merchant_id');
+    }
+    public function courier()
+    {
+        return $this->belongsTo(Courier::class, 'courier_id'); // Ensure courier_id is the foreign key
+    }
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -59,10 +71,7 @@ class Order extends Model
     {
         return $this->belongsTo(Address::class, 'sender_address_id');
     }
-    public function courier()
-    {
-        return $this->belongsTo(Courier::class); // Adjust if the foreign key is different
-    }
+   
 
     public function receiverAddress()
     {

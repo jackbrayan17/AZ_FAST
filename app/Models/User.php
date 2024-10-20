@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles; // Import the HasRoles trait
 use App\Models\Merchant;
+use App\Models\UserSession;
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles; // Use the HasRoles trait for role and permission management
@@ -50,6 +51,34 @@ class User extends Authenticatable
      * @param string $password
      * @return void
      */
+    public function sessions()
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
+    public function totalOnlineDuration()
+    {
+        // Sum the total duration of all user sessions
+        return $this->sessions()->sum('duration');
+    }
+
+    public function lastLogin()
+    {
+        // Get the latest session's login time
+        return $this->hasMany(UserSession::class)->latest()->first()->login_at ?? null;
+    }
+
+    public function lastLogout()
+    {
+        // Get the latest session's logout time (if exists)
+        return $this->sessions()->latest()->first()->logout_at ?? null;
+    }
+
+    public function isOnline()
+    {
+        // A user is online if their latest session has no logout time
+        return $this->hasMany(UserSession::class)->whereNull('logout_at')->exists();
+    }
     public function setPasswordAttribute($password)
     {
         $this->attributes['password'] = bcrypt($password);

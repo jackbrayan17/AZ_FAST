@@ -21,6 +21,10 @@ class Courier extends User
         'neighborhood',
     ];
 
+    public function addresses()
+    {
+        return $this->hasMany(CourierAddress::class);
+    }
     public function wallet()
     {
         return $this->hasOne(Wallet::class);

@@ -12,7 +12,6 @@
 
     <!-- User Info and Logout on the Right -->
     <div class="flex items-center ml-auto">
-        <!-- Display Profile Picture -->
         @if (auth()->user()->profileImage)
             <img src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile Image" class="w-10 h-10 rounded-full">
         @else
@@ -31,136 +30,124 @@
     </div>
 </header>
 @endif
-    <div id="map" style="height: 500px;"></div>
-    <div id="courier-info" class="mt-4">
-        <h2>Courier Position</h2>
-        <p id="address-name">Address: N/A</p>
-        <p id="coordinates">Coordinates: N/A</p>
-        <p id="distance-info">Distance: N/A</p>
-    </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<div id="map" style="height: 500px;"></div>
 
-    <script>
-        // Your OpenRouteService API key
-        const apiKey = '5b3ce3597851110001cf6248c656d902329a4797a48fa15e350c1834';
+{{-- <div id="courier-info" class="mt-4">
+    <h2>Courier Position</h2>
+    <p id="address-name">Address: N/A</p>
+    <p id="coordinates">Coordinates: N/A</p>
+    <p id="distance-info">Distance: N/A</p>
+</div> --}}
 
-        // Coordinates for sender and receiver
-        let senderCoordinates = [{{ $senderLatitude }}, {{ $senderLongitude }}];
-        let receiverCoordinates = [{{ $receiverLatitude }}, {{ $receiverLongitude }}];
-        let courierCoordinates = [0, 0]; // Initial position for courier
-        let routeLine; // Variable to store the route line on the map
+<!-- Include Leaflet.js and its styles -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-        // Initialize the map
-        const map = L.map('map').setView(senderCoordinates, 13);
+<script>
+    const apiKey = '5b3ce3597851110001cf6248c656d902329a4797a48fa15e350c1834';
+    let senderCoordinates = [{{ $senderLatitude }}, {{ $senderLongitude }}];
+    let receiverCoordinates = [{{ $receiverLatitude }}, {{ $receiverLongitude }}];
+    let courierCoordinates = [0, 0]; 
+    let routeLine;
+    const map = L.map('map').setView(senderCoordinates, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+    const senderMarker = L.marker(senderCoordinates).addTo(map).bindPopup('Sender');
+    const receiverMarker = L.marker(receiverCoordinates).addTo(map).bindPopup('Receiver');
+    const courierMarker = L.marker(courierCoordinates).addTo(map).bindPopup('Courier');
 
-        // Add markers for sender and receiver
-        const senderMarker = L.marker(senderCoordinates).addTo(map).bindPopup('Sender');
-        const receiverMarker = L.marker(receiverCoordinates).addTo(map).bindPopup('Receiver');
+    function saveCourierLocation(latitude, longitude) {
+        fetch(`/courier/location`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+            },
+            body: JSON.stringify({
+                courier_id: {{ auth()->user()->id }},
+                latitude: latitude,
+                longitude: longitude,
+            }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+        })
+        .catch(err => console.error('Error saving location:', err));
+    }
 
-        const courierMarker = L.marker(courierCoordinates).addTo(map).bindPopup('Courier');
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    courierCoordinates = [position.coords.latitude, position.coords.longitude];
+                    courierMarker.setLatLng(courierCoordinates);
+                    map.panTo(courierCoordinates);
 
-        function saveCourierLocation(latitude, longitude) {
-            fetch(`/courier/location`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}', // Include CSRF token
+                    updateCourierInfo(courierCoordinates[0], courierCoordinates[1]);
+                    saveCourierLocation(courierCoordinates[0], courierCoordinates[1]); 
                 },
-                body: JSON.stringify({
-                    courier_id: courierId,
-                    latitude: latitude,
-                    longitude: longitude,
-                }),
+                error => {
+                    console.error('Error fetching location:', error);
+                    alert('Unable to fetch courier location');
+                }
+            );
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
+    function updateCourierInfo(latitude, longitude) {
+        document.getElementById('coordinates').innerText = `Coordinates: ${latitude}, ${longitude}`;
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('address-name').innerText = `Address: ${data.display_name || 'N/A'}`;
             })
+            .catch(err => console.error('Error fetching address:', err));
+    }
+
+    function fetchRouteAndDisplayDistance(targetCoordinates, targetName) {
+        if (routeLine) {
+            map.removeLayer(routeLine); 
+        }
+        
+        const courierLatLng = `${courierCoordinates[1]},${courierCoordinates[0]}`;
+        const targetLatLng = `${targetCoordinates[1]},${targetCoordinates[0]}`;
+
+        console.log(`Fetching route from ${courierLatLng} to ${targetLatLng}`);
+
+        fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${courierLatLng}&end=${targetLatLng}`)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error(`Fetch error: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Route data:', data);
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    routeLine = L.polyline(route.geometry.coordinates.map(coord => [coord[1], coord[0]]), { color: 'blue' }).addTo(map);
+                    const distance = route.summary.distance / 1000; 
+                    const popupContent = `${targetName}<br>Distance: ${distance.toFixed(2)} km`;
+                    receiverMarker.bindPopup(popupContent).openPopup();
+                } else {
+                    console.error('No routes found:', data);
                 }
             })
-            .catch(err => console.error('Error saving location:', err));
-        
-        };
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    position => {
-                        courierCoordinates = [position.coords.latitude, position.coords.longitude];
-                        courierMarker.setLatLng(courierCoordinates);
-                        map.panTo(courierCoordinates);
+            .catch(err => console.error('Error fetching route data:', err));
+    }
 
-                        updateCourierInfo(courierCoordinates[0], courierCoordinates[1]);
-                        saveCourierLocation(courierCoordinates[0], courierCoordinates[1]); // Save location
-                    },
-                    error => console.error('Error fetching location:', error)
-                );
-            } else {
-                console.error('Geolocation is not supported by this browser.');
-            }
-        }
+    senderMarker.on('click', () => fetchRouteAndDisplayDistance(senderCoordinates, 'Sender'));
+    receiverMarker.on('click', () => fetchRouteAndDisplayDistance(receiverCoordinates, 'Receiver'));
 
-        // Function to update courier information on the front end
-        function updateCourierInfo(latitude, longitude) {
-            document.getElementById('coordinates').innerText = `Coordinates: ${latitude}, ${longitude}`;
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('address-name').innerText = `Address: ${data.display_name || 'N/A'}`;
-                })
-                .catch(err => console.error('Error fetching address:', err));
-        }
-
-        // Function to fetch and display the route
-        function fetchRouteAndDisplayDistance(targetCoordinates, targetName) {
-            if (routeLine) {
-                map.removeLayer(routeLine); // Remove old route if it exists
-            }
-
-            const courierLatLng = `${courierCoordinates[1]},${courierCoordinates[0]}`;
-            const targetLatLng = `${targetCoordinates[1]},${targetCoordinates[0]}`;
-
-            // Fetch route data from OpenRouteService
-            fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${courierLatLng}&end=${targetLatLng}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.routes && data.routes.length > 0) {
-                        const route = data.routes[0];
-                        routeLine = L.polyline(route.geometry.coordinates.map(coord => [coord[1], coord[0]]), { color: 'blue' }).addTo(map);
-
-                        // Calculate distance in kilometers
-                        const distance = route.summary.distance / 1000; // Convert meters to kilometers
-                        const popupContent = `${targetName}<br>Distance: ${distance.toFixed(2)} km`;
-
-                        // Update the marker's popup with distance
-                        L.marker([targetCoordinates[0], targetCoordinates[1]]).addTo(map).bindPopup(popupContent).openPopup();
-                    } else {
-                        console.error('No routes found:', data);
-                    }
-                })
-                .catch(err => console.error('Error fetching route data:', err));
-        };
-        
-       
-        // Event listeners for clicking on markers
-        senderMarker.on('click', () => fetchRouteAndDisplayDistance(senderCoordinates, 'Sender'));
-        receiverMarker.on('click', () => fetchRouteAndDisplayDistance(receiverCoordinates, 'Receiver'));
-
-        // Get the initial position of the courier
-        getCurrentLocation();
-
-        // Update courier position every 5 seconds (if needed)
-        setInterval(getCurrentLocation, 5000);
-    </script>
+    getCurrentLocation();
+    setInterval(getCurrentLocation, 5000);
+</script>
 @endsection

@@ -24,7 +24,7 @@
         </div>
 
         <!-- Login Form -->
-        <form method="POST" action="{{ route('login') }}">
+        <form id="loginForm" method="POST" action="{{ route('login') }}">
             @csrf
 
             <!-- Email Field -->
@@ -42,7 +42,9 @@
                     class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
                     required>
             </div>
-
+            <input type="hidden" name="longitude" id="longitude">
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="address_name" id="address_name">
             <!-- Submit Button -->
             <div>
                 <button type="submit"
@@ -57,8 +59,43 @@
             Register as a client: <a href="{{ route('client.register.form') }}"
                 class="text-emerald-600 hover:underline">Register</a>
         </p>
-    </div>
-
+    </div><script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+    
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const longitude = position.coords.longitude;
+                    const latitude = position.coords.latitude;
+    
+                    // Set the hidden fields with geolocation data
+                    document.getElementById('longitude').value = longitude;
+                    document.getElementById('latitude').value = latitude;
+    
+                    // Get address name using reverse geocoding
+                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const address = data.display_name || "Unknown Address"; // Fallback if address not found
+                            document.getElementById('address_name').value = address;
+    
+                            // Submit the form with all data
+                            event.target.submit();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching the address:', error);
+                            alert("Could not retrieve the address. Submitting without address.");
+                            // Still submit the form without address name
+                            event.target.submit();
+                        });
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+                // Still submit the form without geolocation
+                event.target.submit();
+            }
+        });
+    </script>
 </body>
 
 </html>

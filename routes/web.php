@@ -37,7 +37,7 @@ Route::get('/get-quarters/{town}', [OrderController::class, 'getQuarters']);
 Route::get('/storefronts/{id}', [StorefrontController::class, 'show'])->name('storefronts.show');
 Route::get('/merchant/storefronts/{id}', [MerchantController::class, 'viewStorefront'])->name('merchant.storefront.view');
 Route::get('/merchant/order/track/{id}', [MerchantController::class, 'trackOrder'])->name('merchant.orders.track');
-Route::get('/courier/order/track/{id}', [CourierController::class, 'trackOrder'])->name('courier.orders.track');
+Route::get('/courier/orders/track/{id}', [CourierController::class, 'trackOrder'])->name('courier.orders.track');
 Route::get('/client/order/track/{id}', [ClientController::class, 'trackOrder'])->name('client.orders.track');
 Route::post('/courier/location', [CourierController::class, 'updateLocation'])->name('courier.location.update');
 Route::get('/storefronts/{storefrontId}/add-product', [ProductController::class, 'create'])->name('products.create');
@@ -57,6 +57,8 @@ Route::get('/get-courier-location', function (Request $request) {
         'longitude' => $order->courier_longitude,
     ]);
 });
+Route::get('/courier/deliveries/start/{order}', [CourierController::class, 'startDelivery'])->name('courier.deliveries.start');
+
 Route::get('/deliveries/start/{order}', [OrderController::class, 'startDelivery'])->name('deliveries.start');
 Route::get('/client/orders/index', [ClientController::class, 'clientOrder'])->name('client.orders.index');
 

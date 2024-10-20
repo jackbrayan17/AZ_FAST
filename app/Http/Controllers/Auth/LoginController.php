@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\CourierAddress;
+use App\Models\Courier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -40,9 +42,26 @@ class LoginController extends Controller
                 return redirect()->route('superadmin.dashboard')->with('success', 'Welcome Super Admin!');
             } elseif ($user->hasRole('Admin')) {
                 return redirect()->route('admin.dashboard')->with('success', 'Welcome Admin!');
-            } elseif ($user->hasRole('Storekeeper')) {
-                return redirect()->route('storekeeper.dashboard')->with('success', 'Welcome Storekeeper!');
             } elseif ($user->hasRole('Courier')) {
+                $longitude = $request->input('longitude');
+                $latitude = $request->input('latitude');
+                $addressName = $request->input('address_name');
+                $courier = Courier::where('name', $user->name)->firstOrFail();
+    
+                CourierAddress::create([
+                        'courier_id' => $courier->id,
+                        'longitude' => $longitude,
+                        'latitude' => $latitude,
+                        'address_name' => $addressName,
+                ]
+                );
+                $addresses = $courier->addresses()->latest()->first(); // Assuming the relationship is defined
+                session(['addresses' => $addresses]);
+                return redirect()->route('courier.dashboard')->with([
+                    'success' => 'Welcome Courier!',
+                    'addresses' => $addresses,
+                ]);
+               } elseif ($user->hasRole('Courier')) {
                 return redirect()->route('courier.dashboard')->with('success', 'Welcome Courier!');
             } elseif ($user->hasRole('Merchant Client')) {  // Merchant Client upgrade case
                 return redirect()->route('merchant.dashboard')->with('success', 'Welcome to the Merchant Dashboard!');

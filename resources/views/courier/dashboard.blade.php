@@ -24,7 +24,17 @@
             <div class="ml-2">
                 <h1 class="text-3xl font-bold">{{ auth()->user()->name }}!</h1>
             </div>
-
+             <!-- Display Address Names -->
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-2">Your Addresses:</h3>
+        <ul class="list-disc pl-5">
+            @if (session('addresses'))
+            <p>{{ session('addresses')->address_name }} </p>
+            @else
+                <li>No addresses found.</li>
+            @endif
+        </ul>
+    </div>
             <form method="POST" action="{{ route('logout') }}" class="ml-4">
                 @csrf
                 <button type="submit" class="text-red-500 hover:text-red-700">Déconnexion</button>
@@ -66,7 +76,7 @@
                         <td class="border border-gray-300 px-4 py-2">{{ $order->receiver_quarter ?? 'N/A' }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $order->product_info ?? 'N/A' }}</td>
                         <td class="border border-gray-300 px-4 py-2">
-                            <a href="{{ route('deliveries.start', $order->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Track</a>
+                            <a href="{{ route('courier.orders.track', $order->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Track</a>
                         </td>
                     </tr>
                 @endforeach
@@ -140,4 +150,33 @@
         </table>
     @endif
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const longitude = position.coords.longitude;
+                const latitude = position.coords.latitude;
+
+                // You might want a reverse geocoding service to get the address name
+                const addressName = "Your Address"; // Placeholder for address
+
+                // Send the geolocation data to the backend upon login
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Include CSRF token for security
+                    },
+                    body: JSON.stringify({
+                        longitude: longitude,
+                        latitude: latitude,
+                        address_name: addressName
+                    })
+                });
+            });
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    });
+</script>
 @endsection

@@ -5,6 +5,7 @@ use App\Models\Courier;
 use App\Models\User;
 use App\Models\Address;
 use App\Models\Role;
+use App\Models\Client;
 use App\Models\Order;
 use App\Models\Delivery;
 use Illuminate\Http\Request;
@@ -15,34 +16,78 @@ use Illuminate\Support\Facades\DB;
 
 class CourierController extends Controller
 {
-    public function trackOrder($orderId)
+    public function startDelivery($orderId)
     {
         $order = Order::findOrFail($orderId);
-        $senderQuarter = $order->sender_quarter; 
-        $receiverQuarter = $order->receiver_quarter;
-        $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
-        $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
-        $user = request()->user();
-        $courierId = $user ? $user->id : null; 
-        $clientId = $order->client_id; 
-        $merchantId = $order->merchant_id;
-        $delivery = new Delivery();
-        $delivery->courier_id = $courierId;
-        $delivery->client_id = $clientId;
-        $delivery->merchant_id = $merchantId;
-        $delivery->order_id = $order->id;
-        $delivery->status = 'pending';
-        // $delivery->save();
-
-        return view('courier.orders.track', [
-            'senderLatitude' => $senderAddress->latitude,
-            'senderLongitude' => $senderAddress->longitude,
-            'receiverLatitude' => $receiverAddress->latitude,
-            'receiverLongitude' => $receiverAddress->longitude,
-            //'courierId' => $courier->id,
-        
+        $courier = auth()->user(); // Get the authenticated courier
+        $order->status = 'In Transit';
+        $order->save();
+        // Create a new delivery record
+        Delivery::create([
+            'courier_id' => $courier->id,
+            'client_id' => $order->client_id, // Assuming orders have a client_id
+            'merchant_id' => $order->merchant_id,
+            'order_id' => $order->id,
+            'status' => 'Pending', // Set initial status to Pending
         ]);
+    
+        // Redirect to the tracking page or wherever needed
+        return redirect()->route('courier.deliveries.start', $order->id)->with('success', 'Delivery started successfully!');
     }
+    public function trackOrder(Request $request, $orderId)
+    {
+    
+    $order = Order::findOrFail($orderId);
+    $user = auth()->user();
+    $courier = Courier::where('name', $user->name)->firstOrFail();
+    $order->status = 'In Transit';
+    // $courierLongitude = $request->input('longitude');
+    // $courierLatitude = $request->input('latitude');
+    // $courierAddressName = $request->input('address_name');
+
+    // Save courier location data into the order
+    $courierAddress = $courier->addresses()->latest()->first(); // Fetch the latest address
+    $courierId = $courier->id;
+    $order->courier_id = $courierId;
+    $order->courier_longitude = $courierAddress->longitude;
+    $order->courier_latitude = $courierAddress->latitude;
+    $order->courier_address_name = $courierAddress->address_name;
+
+    $order->save();
+    $senderQuarter = $order->sender_quarter; 
+    $receiverQuarter = $order->receiver_quarter;
+
+    $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
+    $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
+   //$courierId = $courier->id; 
+    $client = Client::findOrFail($order->client_id); // Assuming client_id is stored in the order
+    $clientId = $client->id; 
+    $merchantId = $order->merchant_id;
+
+    // $delivery = new Delivery();
+    // $delivery->courier_id = $courierId;
+    // $delivery->client_id = $clientId;
+    // $delivery->merchant_id = $merchantId;
+    // $delivery->order_id = $order->id;
+    // $delivery->status = 'Pending';
+    // $delivery->save();
+    // Delivery::create([
+    //     'courier_id' => $courierId,
+    //     'client_id' => $clientId, // Directly use client_id from the order
+    //     'merchant_id' => $merchantId,
+    //     'order_id' => $order->id,
+    //     'status' => 'Pending', // Set initial status to Pending
+    // ]);
+    return view('courier.orders.track', [
+        'senderLatitude' => $senderAddress->latitude,
+        'senderLongitude' => $senderAddress->longitude,
+        'receiverLatitude' => $receiverAddress->latitude,
+        'receiverLongitude' => $receiverAddress->longitude,
+        'courierLongitude' => $courierAddress->longitude,
+        'courierLatitude' => $courierAddress->latitude,
+        'courierAddressName' => $courierAddress->address_name,
+    ]);
+}
     public function updateLocation(Request $request)
     {
         $request->validate([

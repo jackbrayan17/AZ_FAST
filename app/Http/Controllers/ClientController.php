@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Address;
+use App\Models\Client;
+use App\Models\Merchant;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -16,20 +18,39 @@ class ClientController extends Controller
 {
     public function trackOrder($orderId)
     {
+        // Retrieve the order by its ID
         $order = Order::findOrFail($orderId);
+    
+        // Retrieve sender and receiver addresses
         $senderQuarter = $order->sender_quarter; // Assuming this is stored in the Order model
         $receiverQuarter = $order->receiver_quarter; // Assuming this is stored in the Order model
         $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
         $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
-        $courier = auth()->user(); // Assuming the courier is linked to the order
+    
+        // Retrieve the courier for this order
+        $courier = $order->courier; // Assuming courier is linked to the order
+    
+        // Check if the courier is not null
+        if (!$courier) {
+            // Handle the case where no courier is assigned to the order
+            return response()->json(['error' => 'No courier assigned to this order'], 404);
+        }
+    
+        // Retrieve the courier's initial address (the latest one or tied to the order)
+        $courierAddressName = $order->courier_address_name;
     
         return view('client.orders.track', [
+            'order' => $order,
             'senderLatitude' => $senderAddress->latitude,
             'senderLongitude' => $senderAddress->longitude,
             'receiverLatitude' => $receiverAddress->latitude,
             'receiverLongitude' => $receiverAddress->longitude,
+            'courierLatitude' => $order->courier_latitude ?? null,
+            'courierLongitude' => $order->courier_longitude ?? null,
+            'courierAddressName' => $order->courier_address_name ?? 'N/A'
         ]);
     }
+    
     public function showUpgradeForm()
 {
     return view('client.upgrade');
@@ -51,7 +72,12 @@ public function products()
         if (!$wallet || $wallet->balance < 1000) {
             return redirect()->back()->with('error', 'Solde insuffisant dans votre portefeuille pour effectuer cette opération.');
         }
-    
+        Merchant::create([
+            'user_id' => $client->id,
+            'name' => $client->name,
+            'phone' => $client->phone,
+            'address' => $client->address,
+        ]);
         $wallet->balance -= 1000;
         $wallet->save();
         DB::table('model_has_roles')->insert([
@@ -100,8 +126,11 @@ public function products()
             'password' => $request->password,
             'role' => 'client'
         ]);
-
-        if ($request->hasFile('profile_image')) {
+        $clients = Client::create([
+            'user_id' => $client->id,
+            // Add any additional fields for the Client model here
+        ]);
+            if ($request->hasFile('profile_image')) {
             $file = $request->file('profile_image');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('uploads/profile_images', $fileName, 'public');

@@ -85,7 +85,7 @@ class OrderController extends Controller
             'merchant_id' => $request->merchant_id,
         ]);
     
-        return redirect()->route('orders.index')->with('success', 'Order placed successfully and is pending.');
+        return redirect()->route('client.orders.index')->with('success', 'Order placed successfully and is pending.');
     }
     
     public function verificationPage($orderId)
