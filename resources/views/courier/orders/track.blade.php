@@ -3,14 +3,12 @@
 @section('content')
 @if (auth()->check())
 <header class="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow mb-6">
-    <!-- AZ Logo on the Left -->
     <div class="flex items-center">
-        <a href="/courier/dashboard"> 
+        <a href="/courier/dashboard">
             <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo" class="h-10 w-auto mr-4">
         </a>
     </div>
 
-    <!-- User Info and Logout on the Right -->
     <div class="flex items-center ml-auto">
         @if (auth()->user()->profileImage)
             <img src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile Image" class="w-10 h-10 rounded-full">
@@ -33,44 +31,68 @@
 
 <div id="map" style="height: 500px;"></div>
 
-{{-- <div id="courier-info" class="mt-4">
-    <h2>Courier Position</h2>
-    <p id="address-name">Address: N/A</p>
-    <p id="coordinates">Coordinates: N/A</p>
-    <p id="distance-info">Distance: N/A</p>
-</div> --}}
+<div id="courier-info" class="mt-4">
+    <h2 class="text-lg font-semibold">Courier Current Position</h2>
+    <p id="address-name" class="text-sm">Address: N/A</p>
+    <p id="coordinates" class="text-sm">Coordinates: N/A</p>
+</div>
 
-<!-- Include Leaflet.js and its styles -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
 <script>
     const apiKey = '5b3ce3597851110001cf6248c656d902329a4797a48fa15e350c1834';
+    let courierCoordinates = [0, 0];
     let senderCoordinates = [{{ $senderLatitude }}, {{ $senderLongitude }}];
     let receiverCoordinates = [{{ $receiverLatitude }}, {{ $receiverLongitude }}];
-    let courierCoordinates = [0, 0]; 
     let routeLine;
+    
     const map = L.map('map').setView(senderCoordinates, 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
     }).addTo(map);
 
+    const courierMarker = L.marker(courierCoordinates).addTo(map).bindPopup('Courier');
     const senderMarker = L.marker(senderCoordinates).addTo(map).bindPopup('Sender');
     const receiverMarker = L.marker(receiverCoordinates).addTo(map).bindPopup('Receiver');
-    const courierMarker = L.marker(courierCoordinates).addTo(map).bindPopup('Courier');
 
-    function saveCourierLocation(latitude, longitude) {
+    function drawRoute(startCoords, endCoords) {
+        const routeUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${startCoords[1]},${startCoords[0]}&end=${endCoords[1]},${endCoords[0]}`;
+        
+        fetch(routeUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (routeLine) {
+                    map.removeLayer(routeLine);
+                }
+
+                const routeCoords = data.features[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                routeLine = L.polyline(routeCoords, { color: 'blue' }).addTo(map);
+                map.fitBounds(routeLine.getBounds());
+            })
+            .catch(err => console.error('Error drawing route:', err));
+    }
+
+    senderMarker.on('click', function () {
+        drawRoute(courierCoordinates, senderCoordinates);
+    });
+
+    receiverMarker.on('click', function () {
+        drawRoute(senderCoordinates, receiverCoordinates);
+    });
+
+    function saveCourierLocation(latitude, longitude, addressName) {
         fetch(`/courier/location`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
             },
             body: JSON.stringify({
-                courier_id: {{ auth()->user()->id }},
                 latitude: latitude,
                 longitude: longitude,
+                address_name: addressName,
             }),
         })
         .then(response => {
@@ -90,7 +112,6 @@
                     map.panTo(courierCoordinates);
 
                     updateCourierInfo(courierCoordinates[0], courierCoordinates[1]);
-                    saveCourierLocation(courierCoordinates[0], courierCoordinates[1]); 
                 },
                 error => {
                     console.error('Error fetching location:', error);
@@ -107,47 +128,15 @@
         fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('address-name').innerText = `Address: ${data.display_name || 'N/A'}`;
+                const addressName = data.display_name || 'Unknown Address';
+                document.getElementById('address-name').innerText = `Address: ${addressName}`;
+                
+                saveCourierLocation(latitude, longitude, addressName);
             })
             .catch(err => console.error('Error fetching address:', err));
     }
 
-    function fetchRouteAndDisplayDistance(targetCoordinates, targetName) {
-        if (routeLine) {
-            map.removeLayer(routeLine); 
-        }
-        
-        const courierLatLng = `${courierCoordinates[1]},${courierCoordinates[0]}`;
-        const targetLatLng = `${targetCoordinates[1]},${targetCoordinates[0]}`;
-
-        console.log(`Fetching route from ${courierLatLng} to ${targetLatLng}`);
-
-        fetch(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${courierLatLng}&end=${targetLatLng}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Fetch error: ${response.status} ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Route data:', data);
-                if (data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    routeLine = L.polyline(route.geometry.coordinates.map(coord => [coord[1], coord[0]]), { color: 'blue' }).addTo(map);
-                    const distance = route.summary.distance / 1000; 
-                    const popupContent = `${targetName}<br>Distance: ${distance.toFixed(2)} km`;
-                    receiverMarker.bindPopup(popupContent).openPopup();
-                } else {
-                    console.error('No routes found:', data);
-                }
-            })
-            .catch(err => console.error('Error fetching route data:', err));
-    }
-
-    senderMarker.on('click', () => fetchRouteAndDisplayDistance(senderCoordinates, 'Sender'));
-    receiverMarker.on('click', () => fetchRouteAndDisplayDistance(receiverCoordinates, 'Receiver'));
-
     getCurrentLocation();
-    setInterval(getCurrentLocation, 5000);
+    setInterval(getCurrentLocation, 5000); // Update location every 5 seconds
 </script>
 @endsection

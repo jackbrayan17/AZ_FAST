@@ -35,49 +35,34 @@ class CourierController extends Controller
         return redirect()->route('courier.deliveries.start', $order->id)->with('success', 'Delivery started successfully!');
     }
     public function trackOrder(Request $request, $orderId)
-    {
-    
+{
+    // Retrieve the order and authenticated user
     $order = Order::findOrFail($orderId);
     $user = auth()->user();
-    $courier = Courier::where('name', $user->name)->firstOrFail();
-    $order->status = 'In Transit';
-    // $courierLongitude = $request->input('longitude');
-    // $courierLatitude = $request->input('latitude');
-    // $courierAddressName = $request->input('address_name');
+    
+    // Retrieve the courier by their name (from the authenticated user)
+    $courier = Courier::where('name', auth()->user()->name)->firstOrFail();
 
-    // Save courier location data into the order
-    $courierAddress = $courier->addresses()->latest()->first(); // Fetch the latest address
-    $courierId = $courier->id;
-    $order->courier_id = $courierId;
+    // Update the order status to 'In Transit'
+    $order->status = 'In Transit';
+    
+    // Get the courier's latest address
+    $courierAddress = $courier->addresses()->latest()->first(); 
+    
+    // Update order with courier details
+    $order->courier_id = $courier->id;
     $order->courier_longitude = $courierAddress->longitude;
     $order->courier_latitude = $courierAddress->latitude;
     $order->courier_address_name = $courierAddress->address_name;
 
+    // Save the updated order
     $order->save();
-    $senderQuarter = $order->sender_quarter; 
-    $receiverQuarter = $order->receiver_quarter;
 
-    $senderAddress = Address::where('quarter', $senderQuarter)->firstOrFail();
-    $receiverAddress = Address::where('quarter', $receiverQuarter)->firstOrFail();
-   //$courierId = $courier->id; 
-    $client = Client::findOrFail($order->client_id); // Assuming client_id is stored in the order
-    $clientId = $client->id; 
-    $merchantId = $order->merchant_id;
-
-    // $delivery = new Delivery();
-    // $delivery->courier_id = $courierId;
-    // $delivery->client_id = $clientId;
-    // $delivery->merchant_id = $merchantId;
-    // $delivery->order_id = $order->id;
-    // $delivery->status = 'Pending';
-    // $delivery->save();
-    // Delivery::create([
-    //     'courier_id' => $courierId,
-    //     'client_id' => $clientId, // Directly use client_id from the order
-    //     'merchant_id' => $merchantId,
-    //     'order_id' => $order->id,
-    //     'status' => 'Pending', // Set initial status to Pending
-    // ]);
+    // Retrieve sender and receiver addresses based on their quarters
+    $senderAddress = Address::where('quarter', $order->sender_quarter)->firstOrFail();
+    $receiverAddress = Address::where('quarter', $order->receiver_quarter)->firstOrFail();
+    
+    // Pass data to the courier's track order view
     return view('courier.orders.track', [
         'senderLatitude' => $senderAddress->latitude,
         'senderLongitude' => $senderAddress->longitude,
@@ -88,22 +73,45 @@ class CourierController extends Controller
         'courierAddressName' => $courierAddress->address_name,
     ]);
 }
-    public function updateLocation(Request $request)
+
+public function updateLocation(Request $request)
     {
         $request->validate([
-            'courier_id' => 'required|exists:couriers,id',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
         ]);
-        CourierLocation::create([
-            'courier_id' => $request->courier_id,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-        ]);
-    
-        return response()->json(['message' => 'Location updated successfully.']);
+        $courier = Courier::where('name', auth()->user()->name)->firstOrFail();
+
+        $courierId = $courier->id;
+        $latitude = $request->latitude;
+        $longitude = $request->longitude;
+
+        // Get the address name from reverse geocoding using OpenStreetMap API or other services
+        $addressName = $this->getAddressName($latitude, $longitude);
+
+        // Update or create courier location
+        CourierAddress::updateOrCreate(
+            ['courier_id' => $courierId],
+            [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'address_name' => $addressName,
+            ]
+        );
+
+        return response()->json(['message' => 'Location updated successfully']);
     }
-    public function index()
+
+    // Reverse geocoding function to get address name from latitude and longitude
+    private function getAddressName($latitude, $longitude)
+    {
+        $url = "https://nominatim.openstreetmap.org/reverse?lat={$latitude}&lon={$longitude}&format=json";
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+        
+        return $data['display_name'] ?? 'Unknown Address';
+    }
+        public function index()
     { 
         $couriers = Courier::with('user')->get();
         return view('admin.couriers.index', compact('couriers'));

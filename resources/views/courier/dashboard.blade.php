@@ -25,6 +25,14 @@
                 <h1 class="text-3xl font-bold">{{ auth()->user()->name }}!</h1>
             </div>
              <!-- Display Address Names -->
+    
+            <form method="POST" action="{{ route('logout') }}" class="ml-4">
+                @csrf
+                <button type="submit" class="text-red-500 hover:text-red-700">Déconnexion</button>
+            </form>
+        </div>
+    </header>
+    @endif
     <div class="bg-white p-4 rounded-lg shadow">
         <h3 class="text-lg font-semibold mb-2">Your Addresses:</h3>
         <ul class="list-disc pl-5">
@@ -35,14 +43,6 @@
             @endif
         </ul>
     </div>
-            <form method="POST" action="{{ route('logout') }}" class="ml-4">
-                @csrf
-                <button type="submit" class="text-red-500 hover:text-red-700">Déconnexion</button>
-            </form>
-        </div>
-    </header>
-    @endif
-
     <h2 class="text-xl font-semibold mb-4">Tableau de Bord du Livreur</h2>
 
     <!-- Pending Orders Section -->

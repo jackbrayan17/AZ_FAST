@@ -100,6 +100,7 @@ public function show(Product $product)
     // Update an existing product in the database
     public function update(Request $request, Product $product)
     {
+        // Validate the request data
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -108,11 +109,11 @@ public function show(Product $product)
             'category_id' => 'required|exists:categories,id',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-
+    
         // Update product details
         $product->update($request->all());
-
-        // Handle image deletion
+    
+        // Handle image deletion if requested
         if ($request->has('delete_images')) {
             foreach ($request->delete_images as $imageId) {
                 $image = ProductImage::findOrFail($imageId);
@@ -120,7 +121,7 @@ public function show(Product $product)
                 $image->delete();
             }
         }
-
+    
         // Handle new image uploads
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
@@ -131,9 +132,10 @@ public function show(Product $product)
                 ]);
             }
         }
-
+    
         return redirect()->route('products.index')->with('success', 'Product updated successfully');
     }
+    
 
     // Delete a product
     public function destroy(Product $product)
