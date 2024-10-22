@@ -36,11 +36,80 @@
     <p id="address-name" class="text-sm">Address: N/A</p>
     <p id="coordinates" class="text-sm">Coordinates: N/A</p>
 </div>
+<div class="mt-8 text-center">
+    <button id="endDeliveryBtn" class="bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 focus:outline-none">
+        End Delivery
+    </button>
+</div>
 
+<!-- Modal -->
+<div id="verificationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden">
+    <form action="{{ route('verify.code', ['orderId' => $order->id]) }}" method="POST">
+        @csrf
+        <div class="mb-4">
+            <label for="verification_code" class="block text-sm font-medium text-gray-700">Verification Code</label>
+            <input type="text" name="verification_code" id="verification_code" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+        </div>
+    
+        <div class="mt-4">
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Verify Code</button>
+        </div>
+    </form>
+     
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
 <script>
+      const endDeliveryBtn = document.getElementById('endDeliveryBtn');
+    const verificationModal = document.getElementById('verificationModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const submitCodeBtn = document.getElementById('submitCodeBtn');
+    const errorMessage = document.getElementById('errorMessage');
+
+    endDeliveryBtn.addEventListener('click', function () {
+        verificationModal.classList.remove('hidden');
+    });
+
+    closeModalBtn.addEventListener('click', function () {
+        verificationModal.classList.add('hidden');
+        errorMessage.classList.add('hidden'); // Hide error message when modal is closed
+    });
+
+    submitCodeBtn.addEventListener('click', function () {
+    const verificationCode = document.getElementById('verificationCodeInput').value;
+
+    // Send AJAX request to verify the code
+    fetch(`/verify-code`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+        body: JSON.stringify({
+            verification_code: verificationCode,
+            order_id: '{{ $order->id }}' // Ensure $order is passed correctly from the backend
+        }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error verifying code');
+        }
+        return response.json(); // Parse JSON response
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Verification successful');
+            window.location.href = '/courier/dashboard'; // Redirect to dashboard
+        } else {
+            alert('Invalid verification code');
+        }
+    })
+    .catch(error => {
+        console.error('Error verifying code:', error);
+        alert('An error occurred. Please try again.');
+    });
+});
+
     const apiKey = '5b3ce3597851110001cf6248c656d902329a4797a48fa15e350c1834';
     let courierCoordinates = [0, 0];
     let senderCoordinates = [{{ $senderLatitude }}, {{ $senderLongitude }}];

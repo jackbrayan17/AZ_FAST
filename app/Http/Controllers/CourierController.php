@@ -34,6 +34,36 @@ class CourierController extends Controller
         // Redirect to the tracking page or wherever needed
         return redirect()->route('courier.deliveries.start', $order->id)->with('success', 'Delivery started successfully!');
     }
+    public function verifyCode(Request $request)
+{
+    // Validate the form input
+    $request->validate([
+        'verification_code' => 'required|string|max:7',
+        'order_id' => 'required|exists:orders,id',
+    ]);
+
+    // Find the order based on the ID
+    $order = Order::findOrFail($request->order_id);
+
+    // Check if the logged-in user is the courier assigned to this order
+    if (auth()->id() !== $order->courier_id) {
+        return back()->withErrors(['unauthorized' => 'Unauthorized access to this order']);
+    }
+
+    // Verify the provided verification code
+    if ($order->verification_code === $request->verification_code) {
+        $order->status = 'completed';
+        $order->save();
+
+        // Redirect with a success message
+        return redirect()->route('courier.dashboard')->with('success', 'Delivery successfully completed');
+    }
+
+    // If the code doesn't match, return with an error
+    return back()->withErrors(['invalid_code' => 'Invalid verification code. Please try again.']);
+}
+
+
     public function trackOrder(Request $request, $orderId)
 {
     // Retrieve the order and authenticated user
@@ -64,6 +94,7 @@ class CourierController extends Controller
     
     // Pass data to the courier's track order view
     return view('courier.orders.track', [
+        'order' => $order,
         'senderLatitude' => $senderAddress->latitude,
         'senderLongitude' => $senderAddress->longitude,
         'receiverLatitude' => $receiverAddress->latitude,
@@ -119,7 +150,7 @@ public function updateLocation(Request $request)
     public function dashboard(){
         $courier = auth()->user();
         $pendingOrders = Order::where('status', 'Pending')->get(['id', 'sender_quarter', 'receiver_quarter' ,'sender_town', 'receiver_town','product_info','sender_name', 'receiver_name']);
-        $deliveredOrders = Order::where('status', 'Delivered')->get(['id', 'sender_quarter', 'receiver_quarter','sender_town', 'receiver_town','product_info', 'sender_name', 'receiver_name']);
+        $deliveredOrders = Order::where('status', 'Success')->get(['id', 'sender_quarter', 'receiver_quarter','sender_town', 'receiver_town','product_info', 'sender_name', 'receiver_name']);
         $TransitOrders = Order::where('status', 'In Transit')->get(['id', 'sender_quarter', 'receiver_quarter','sender_town', 'receiver_town','product_info', 'sender_name', 'receiver_name']);
 
         // Pass both variables to the view

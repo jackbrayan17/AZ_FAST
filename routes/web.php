@@ -33,6 +33,7 @@ Route::post('/courier/orders/{id}/start', [OrderController::class, 'startDeliver
 Route::get('/courier/orders/{id}/complete', [OrderController::class, 'completeDelivery'])->name('courier.orders.complete');
 Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
 Route::get('/get-towns/{country}', [OrderController::class, 'getTowns']);
+Route::post('/verify-code/{orderId}', [OrderController::class, 'verifyCode'])->name('verify.code');
 Route::get('/get-quarters/{town}', [OrderController::class, 'getQuarters']);
 Route::get('/storefronts/{id}', [StorefrontController::class, 'show'])->name('storefronts.show');
 Route::get('/merchant/storefronts/{id}', [MerchantController::class, 'viewStorefront'])->name('merchant.storefront.view');

@@ -93,7 +93,7 @@
             <thead class="bg-gray-100">
                 <tr>
                     <th class="border border-gray-300 px-4 py-2">ID de Commande</th>
-                    <th class="border border-gray-300 px-4 py-2">Marchand</th>
+                    {{-- <th class="border border-gray-300 px-4 py-2">Marchand</th> --}}
                     <th class="border border-gray-300 px-4 py-2">Destinataire</th>
                     <th class="border border-gray-300 px-4 py-2">Statut</th>
                 </tr>
@@ -102,7 +102,7 @@
                 @foreach($deliveredOrders as $order)
                     <tr class="hover:bg-gray-50">
                         <td class="border border-gray-300 px-4 py-2">{{ $order->id }}</td>
-                        <td class="border border-gray-300 px-4 py-2">{{ $order->merchant->name }}</td>
+                        {{-- <td class="border border-gray-300 px-4 py-2">{{ $order->merchant->name }}</td> --}}
                         <td class="border border-gray-300 px-4 py-2">{{ $order->receiver_name }}</td>
                         <td class="border border-gray-300 px-4 py-2">{{ $order->status }}</td>
                     </tr>

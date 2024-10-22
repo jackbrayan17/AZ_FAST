@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Order;
+use App\Models\Courier;
+
 use App\Models\Delivery;
 use App\Models\Merchant;
 use App\Models\Product; 
@@ -104,29 +106,33 @@ class OrderController extends Controller
     
     public function verifyCode(Request $request, $orderId)
     {
+        // Validate the form input
         $request->validate([
             'verification_code' => 'required|string|max:7',
         ]);
     
+        // Find the order based on the ID
         $order = Order::findOrFail($orderId);
-    
+        $courier = Courier::where('name', auth()->user()->name)->firstOrFail();
+
         // Ensure only the assigned courier can access this
-        if (auth()->id() !== $order->courier_id) {
-            abort(403, 'Unauthorized access.');
-        }
+        // if (auth()->id() !== $order->courier_id) {
+        //     abort(403, 'Unauthorized access.');
+        // }
     
-        // Check if the provided code matches the order's verification code
+        // Verify the provided verification code
         if ($order->verification_code === $request->verification_code) {
-            // Update the order status to 'completed'
-            $order->status = 'completed';
+            $order->status = 'Success';
             $order->save();
     
-            return redirect()->route('courier.dashboard')->with('success', 'Delivery completed successfully!');
+            // Redirect with a success message
+            return redirect()->route('courier.dashboard')->with('success', 'Delivery successfully completed.');
         }
     
-        return redirect()->back()->with('error', 'Invalid verification code. Please try again.');
+        // If the code doesn't match, return with an error
+        return back()->withErrors(['invalid_code' => 'Invalid verification code. Please try again.']);
     }
-  
+    
     public function showDeliveryForm()
     {
         $countries = Country::all();
