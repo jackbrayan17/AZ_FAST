@@ -1,10 +1,10 @@
 FROM php:8.2-fpm
 
-# Install system dependencies & PHP extensions
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg-dev \
     libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     zip \
     unzip \
     git \
@@ -30,5 +30,5 @@ RUN chown -R www-data:www-data /var/www \
 
 EXPOSE 8000
 
-# Run Laravel app
+# Start Laravel app
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
