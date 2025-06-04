@@ -56,6 +56,12 @@ class User extends Authenticatable
         return $this->hasMany(UserSession::class);
     }
 
+    public function creator()
+{
+    return $this->belongsTo(User::class, 'created_by');
+}
+
+
     public function totalOnlineDuration()
     {
         // Sum the total duration of all user sessions

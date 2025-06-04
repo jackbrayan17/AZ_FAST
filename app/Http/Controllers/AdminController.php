@@ -18,10 +18,13 @@ class AdminController extends Controller
 
     public function index()
     {
-            $users = User::role(['Courier', 'Storekeeper'])->get();
-            return view('admin.dashboard', compact('users'));
+        $users = User::where('created_by', auth()->id())
+                    ->role(['Courier', 'Storekeeper'])
+                    ->get();
+    
+        return view('admin.dashboard', compact('users'));
     }
-
+    
     // Function to create a new admin and assign the 'Admin' role using direct DB insertion
     public function register(Request $request)
     {
@@ -34,12 +37,15 @@ class AdminController extends Controller
         ]);
 
         // Create the user
-        $admin = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => $request->password,
-        ]);
+        // Create the user
+$admin = User::create([
+    'name' => $request->name,
+    'email' => $request->email,
+    'phone' => $request->phone,
+    'password' => $request->password,
+    'created_by' => auth()->id(), // Link to the admin who created
+]);
+
 
         // Ensure the 'Admin' role exists
         $role = Role::firstOrCreate(

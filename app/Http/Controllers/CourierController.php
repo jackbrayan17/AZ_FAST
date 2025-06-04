@@ -144,6 +144,7 @@ public function updateLocation(Request $request)
     }
         public function index()
     { 
+        
         $couriers = Courier::with('user')->get();
         return view('admin.couriers.index', compact('couriers'));
     }

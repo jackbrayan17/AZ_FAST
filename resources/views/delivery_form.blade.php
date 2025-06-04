@@ -63,7 +63,7 @@
                 <!-- Sender Fields -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Sender's Full Name</label>
-                    <input type="text" name="sender_name" placeholder="ex: EYOUN ATTOK J. Bryan" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                    <input type="text" name="sender_name" placeholder="ex: EYOUM ATOCK J-J Bryan" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Sender Phone Number</label>
