@@ -6,13 +6,14 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     libpng-dev \
     libonig-dev \
+    libpq-dev \              
     zip \
     unzip \
     git \
     curl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd mbstring bcmath
-
+    && docker-php-ext-install pdo_mysql pdo_pgsql gd mbstring bcmath \  
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install Composer globally
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
