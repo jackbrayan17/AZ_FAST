@@ -18,7 +18,7 @@
        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body a:any-link{
-            color: #098857 ;
+/*             color: #098857 ; */
             text-decoration: none;
         }
     </style>
