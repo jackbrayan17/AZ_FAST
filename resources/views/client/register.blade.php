@@ -4,21 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ asset('AZ_fastlogo.png') }}" type="image/png">
     <title>Client Registration</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
 </head>
 
-<body class="bg-blue-900 flex items-center justify-center min-h-screen">
-
-    <div class="bg-white max-w-lg w-full p-8 rounded-lg shadow-lg">
-        <!-- Card Title with Icon -->
-        <div class="flex items-center justify-between mb-6">
-            <div class="flex items-center space-x-2">
-                <!-- Icon -->
-                <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo" class="h-10 w-auto mr-4">
-          
-                <h2 class="text-2xl font-bold text-blue-900">S'inscrire</h2>
-            </div>
+<body>
+    <div class="register-card">
+        <!-- Card Header -->
+        <div class="card-header">
+            <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo">
+            <h1 class="card-title">S'inscrire</h1>
         </div>
 
         <!-- Registration Form -->
@@ -26,59 +22,43 @@
             @csrf
 
             <!-- Name Field -->
-            <div class="mb-4">
-                <label for="name" class="block text-sm font-semibold text-gray-700">Nom Complet</label>
-                <input type="text" name="name" id="name"
-                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
-                    required>
+            <div class="form-group">
+                <label for="name">Nom Complet</label>
+                <input type="text" name="name" id="name" class="form-control" required>
             </div>
 
             <!-- Email Field -->
-            <div class="mb-4">
-                <label for="email" class="block text-sm font-semibold text-gray-700">Email</label>
-                <input type="email" name="email" id="email"
-                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
-                    required>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" class="form-control" required>
             </div>
 
             <!-- Phone Field -->
-            <div class="mb-4">
-                <label for="phone" class="block text-sm font-semibold text-gray-700">Numéro de Téléphone</label>
-                <input type="text" name="phone" id="phone"
-                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
-                    required>
+            <div class="form-group">
+                <label for="phone">Numéro de Téléphone</label>
+                <input type="text" name="phone" id="phone" class="form-control" required>
             </div>
 
             <!-- Password Field -->
-            <div class="mb-4">
-                <label for="password" class="block text-sm font-semibold text-gray-700">Mot de Passe</label>
-                <input type="password" name="password" id="password"
-                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
-                    required>
+            <div class="form-group">
+                <label for="password">Mot de Passe</label>
+                <input type="password" name="password" id="password" class="form-control" required>
             </div>
 
             <!-- Confirm Password Field -->
-            <div class="mb-6">
-                <label for="password_confirmation"
-                    class="block text-sm font-semibold text-gray-700">Confirmation Mot de Passe</label>
-                <input type="password" name="password_confirmation" id="password_confirmation"
-                    class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600"
-                    required>
+            <div class="form-group">
+                <label for="password_confirmation">Confirmation Mot de Passe</label>
+                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
             </div>
 
             <!-- Submit Button -->
-            <div>
-                <button type="submit"
-                    class="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">
-                    S'inscrire
-                </button>
-            </div>
+            <button type="submit" class="btn">S'inscrire</button>
         </form>
 
         <!-- Error Messages -->
         @if ($errors->any())
-            <div class="mt-6 p-4 bg-red-100 text-red-700 rounded-lg">
-                <ul class="list-disc pl-5">
+            <div class="error-container">
+                <ul class="error-list">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
@@ -87,11 +67,10 @@
         @endif
 
         <!-- Log In Link -->
-        <p class="mt-6 text-center text-gray-600">
-            Log In: <a href="{{ route('login') }}" class="text-emerald-600 hover:underline">Log In</a>
+        <p class="login-link">
+            Log In: <a href="{{ route('login') }}">Log In</a>
         </p>
     </div>
-
 </body>
 
 </html>

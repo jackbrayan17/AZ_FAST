@@ -3,61 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/v4-shims.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" href="{{ asset('AZ_fastlogo.png') }}" type="image/png">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <title>@yield('title', 'EEUEZ Market')</title>
-</head>
-<body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        body{
-       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --primary: #059669;
+            --primary-dark: #047857;
+            --secondary: #1e40af;
+            --accent: #f59e0b;
+            --text: #374151;
+            --light: #f9fafb;
+            --dark: #1f2937;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
         }
-        body a:any-link{
-/*             color: #098857 ; */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+            padding-bottom: 60px; /* Space for mobile navbar */
+        }
+
+        /* Mobile Bottom Navigation */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+            display: none; /* Hidden by default, shown on mobile */
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             text-decoration: none;
+            color: var(--text);
+            font-size: 12px;
+            transition: var(--transition);
+        }
+
+        .mobile-nav-item i {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary);
+        }
+
+        .mobile-nav-item:hover {
+            color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 30px 0;
+            margin-top: 40px;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .footer-section p, .footer-section a {
+            margin-bottom: 10px;
+            display: block;
+            color: #d1d5db;
+            transition: var(--transition);
+        }
+
+        .footer-section a:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-links a {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: flex;
+                align-items: center;
+            }
+
+            footer {
+                padding-bottom: 70px; /* Account for mobile nav */
+                /* height: 100px; */
+            }
         }
     </style>
-   
+    @yield('styles')
+</head>
+<body>
     <main>
         @yield('content')
     </main>
-    <footer class="bg-gray-800 text-white mt-10 py-6">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-            <div class="text-center md:text-left">
-                <h2 class="text-lg font-semibold">Informations de Contact</h2>
-                <p class="mt-2">EEUEZ Market</p>
-                <p class="mt-1">Email: <a href="mailto:contact@eeuezmarket.com" class="text-blue-400 hover:underline">contact@eeuezmarket.com</a></p>
-                <p class="mt-1">Téléphone: <a href="tel:+237657757036" class="text-blue-400 hover:underline">+237 657 757 036</a></p>
-            </div>
-            <div class="mt-4 md:mt-0 text-center">
-                <p class="text-sm">©2025 EEUEZ Market. Tous droits réservés.</p>
-                <div class="flex justify-center mt-2 space-x-4">
-                    <a href="[Lien Facebook]" class="text-blue-400 hover:text-blue-300" target="_blank">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="[Lien Twitter]" class="text-blue-400 hover:text-blue-300" target="_blank">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="[Lien Instagram]" class="text-blue-400 hover:text-blue-300" target="_blank">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                    <a href="[Lien LinkedIn]" class="text-blue-400 hover:text-blue-300" target="_blank">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>EEUEZ Market</h3>
+                <p>La meilleure plateforme d'achat et de vente en ligne.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
+            <div class="footer-section">
+                <h3>Liens rapides</h3>
+                <a href="/">Accueil</a>
+                <a href="/products">Produits</a>
+                <a href="/about">À propos</a>
+                <a href="/contact">Contact</a>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p><i class="fas fa-envelope mr-2"></i> contact@eeuezmarket.com</p>
+                <p><i class="fas fa-phone mr-2"></i> +237 657 757 036</p>
+            </div>
         </div>
-    </div>
-</footer>
-    
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>    
-    
-    
+        <div class="copyright">
+            ©2025 EEUEZ Market. Tous droits réservés.
+        </div>
+    </footer>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <a href="/" class="mobile-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Accueil</span>
+        </a>
+        <a href="/products" class="mobile-nav-item">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Boutique</span>
+        </a>
+        <a href="/cart" class="mobile-nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Panier</span>
+        </a>
+        
+            <div class="user-menu">
+                @if (auth()->user()->profileImage)
+                    <a href="{{ route('profile.edit') }}">
+                        <img style="height: 40px;transition: transform 0.3s ease;border-radius:50%"  src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile" class="profile-img">
+                    </a>
+                @else
+                    <a href="{{ route('profile.edit') }}">
+                        <img style="height: 40px;transition: transform 0.3s ease;border-radius:50%" src="{{ asset('jblogo.png') }}" alt="Profile" class="profile-img">
+                    </a>
+                @endif
+            </div>
+
+        
+    </nav>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    @yield('scripts')
 </body>
 </html>
