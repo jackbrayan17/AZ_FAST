@@ -66,7 +66,7 @@ class LoginController extends Controller
             } elseif ($user->hasRole('Merchant Client')) {  // Merchant Client upgrade case
                 return redirect()->route('merchant.dashboard')->with('success', 'Welcome to the Merchant Dashboard!');
             } elseif ($user->hasRole('Client')) {
-                return redirect()->route('client.dashboard')->with('success', 'Welcome Client!');
+                return redirect()->route('client.products.index')->with('success', 'Welcome Client!');
             } else {
                 Auth::logout(); // Optional: Log out if no roles
                 return redirect()->route('login')->withErrors(['error' => 'Your account does not have a valid role. Please contact support.']);
