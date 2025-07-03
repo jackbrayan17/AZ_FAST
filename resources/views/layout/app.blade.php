@@ -469,7 +469,7 @@
         </a>
         
             <div class="user-menu">
-                @if (auth()->check() && auth()->user()->profileImage)
+  @if (auth()->check() && auth()->user()->profileImage)
     <a href="{{ route('profile.edit') }}">
         <img style="height: 40px;transition: transform 0.3s ease;border-radius:50%"  src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile" class="profile-img">
     </a>
@@ -478,6 +478,7 @@
         <img style="height: 40px;transition: transform 0.3s ease;border-radius:50%" src="{{ asset('jblogo.png') }}" alt="Profile" class="profile-img">
     </a>
 @endif
+
 
             </div>
 
