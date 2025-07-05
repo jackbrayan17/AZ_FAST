@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupportController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\MerchantController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WalletController;
 use App\Models\Order;
 use App\Http\Controllers\StorefrontController;
+
 
 Route::get('/merchant/orders', [MerchantController::class, 'showOrdersForMerchant'])->name('merchant.orders.show');
 Route::get('/admin/orders/{id}/edit', [OrderController::class, 'edit'])->name('admin.orders.edit');
@@ -196,3 +198,51 @@ Route::get('/delivery-form', function () {
 Route::group(['middleware' => ['role:Admin|Super Admin']], function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 });
+
+
+
+
+// WebAuth routes
+Route::get('/description/{product}', [ProductController::class, 'description'])->name('products.description');
+// Routes du panier
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'view'])->name('cart.view');
+    Route::post('/add', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/update/{product}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/clear', [CartController::class, 'clear'])->name('cart.clear');
+    Route::get('/checkout', [CartController::class, 'showCheckout'])->name('cart.checkout');
+    Route::post('/checkout', [CartController::class, 'processCheckout'])->name('cart.processCheckout');
+
+});
+
+use App\Models\Address;
+
+// Route pour récupérer les quartiers d'une ville
+Route::get('/get-quarters/{town}', function($town) {
+    $quarters = Address::where('town', $town)
+                      ->select('quarter', 'latitude', 'longitude', 'fees')
+                      ->get()
+                      ->map(function($item) {
+                          return [
+                              'quarter' => $item->quarter,
+                              'latitude' => $item->latitude,
+                              'longitude' => $item->longitude
+                          ];
+                      });
+    
+    return response()->json(['quarters' => $quarters]);
+});
+
+// Route pour récupérer les frais de livraison d'un quartier
+Route::get('/get-delivery-fees/{quarter}', function($quarter) {
+    $address = Address::where('quarter', $quarter)->first();
+    
+    if ($address) {
+        return response()->json(['fees' => $address->fees]);
+    }
+    
+    return response()->json(['fees' => 0], 404);
+});
+
+Route::get('/client/products/interests', [ClientController::class, 'productsByInterests'])->name('client.products.interests');

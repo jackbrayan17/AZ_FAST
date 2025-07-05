@@ -350,38 +350,19 @@
         @if (auth()->check())
             <!-- Header -->
             <header class="header">
-                <div class="logo">
-                    <a href="/client/dashboard">
+                <div class="logo" style="position: absolute; left: 20px;">
+                    <a href="/client/dashboard" >
                         <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo">
                     </a>
                 </div>
 
-                <div class="user-info">
-                    @if (auth()->user()->profileImage)
-                        <img src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile Image" class="profile-pic">
-                    @else
-                        <img src="{{ asset('jblogo.png') }}" alt="Default Profile Image" class="profile-pic">
-                        <a href="{{ route('profile.edit') }}" class="add-profile-link">Add profile</a>
-                    @endif
-
-                    <div>
-                        <h1 class="user-name">{{ auth()->user()->name }}!</h1>
-                    </div>
-
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="logout-btn">Déconnexion</button>
-                    </form>
-                </div>
+                
             </header>
 
             <!-- Wallet Card -->
-            <div class="wallet-card pulse">
+            <div class="wallet-card pulse" onclick="location.href='{{ route('wallet.transaction.form') }}'">
                 <h2 class="wallet-title"><i class="fas fa-wallet"></i> Montant du portefeuille</h2>
                 <p class="wallet-amount">{{ number_format(auth()->user()->wallet->balance, 2) }} FCFA</p>
-                <a href="{{ route('wallet.transaction.form') }}" class="wallet-btn">
-                    <i class="fas fa-cog"></i> Gérer mon portefeuille
-                </a>
             </div>
 
             <!-- Upgrade Button -->

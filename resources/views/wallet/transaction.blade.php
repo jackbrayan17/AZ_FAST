@@ -1,397 +1,27 @@
-@extends('layout.app')
-
-@section('content')
-<header class="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow mb-6">
-    <!-- AZ Logo on the Left -->
-    <div class="flex items-center">
-        <a href="/client/dashboard"> 
-            <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo" class="h-10 w-auto mr-4">
-        </a>   </div>
-
-    <!-- User Info and Logout on the Right -->
-    <div class="flex items-center ml-auto">
-        <!-- Display Profile Picture -->
-        @if (auth()->user()->profileImage)
-            <img src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile Image" class="w-10 h-10 rounded-full">
-        @else
-            <img src="{{ asset('jblogo.png') }}" alt="Default Profile Image" class="w-10 h-10 rounded-full">
-            <a href="{{ route('profile.edit') }}" class="text-blue-500 ml-2">Add profile</a>
-        @endif
-
-        <div class="ml-2">
-            <h1 class="text-3xl font-bold">{{ auth()->user()->name }}!</h1>
-        </div>
-
-        <form method="POST" action="{{ route('logout') }}" class="ml-4">
-            @csrf
-            <button type="submit" class="text-red-500 hover:text-red-700">Déconnexion</button>
-        </form>
-    </div>
-</header>
-<div class="container mx-auto p-6 bg-white rounded-lg shadow-md">
-    <h1 class="text-3xl font-bold mb-6">Votre portefeuille</h1>
-
-    <p class="mb-4 text-lg">Solde actuel: <span class="font-semibold">{{ number_format($wallet->balance, 2) }} FCFA</span></p>
-
-    <!-- Deposit Form -->
-    <form action="{{ route('wallet.deposit') }}" method="POST" class="mb-8 p-4 bg-gray-100 rounded-lg shadow">
-        @csrf
-        <h2 class="text-xl font-semibold mb-4">Déposer des fonds</h2>
-
-        <label for="transaction_type" class="block mb-2 font-medium">Choisir le type de transaction:</label>
-        <select name="transaction_type" class="form-select mb-4 block w-full border border-gray-300 rounded-md p-2" required>
-            <option value="MTN">MTN MoMo</option>
-            <option value="Orange">Orange Money</option>
-        </select>
-
-        <label for="phone_number" class="block mb-2 font-medium">Numéro de téléphone (MTN ou Orange):</label>
-        <input type="text" name="phone_number" class="form-input mb-4 block w-full border border-gray-300 rounded-md p-2" required placeholder="Numéro de transaction">
-
-        <label for="amount" class="block mb-2 font-medium">Montant à déposer:</label>
-        <input type="number" name="amount" step="0.01" class="form-input mb-4 block w-full border border-gray-300 rounded-md p-2" required>
-
-        <button type="submit" class="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-600 transition duration-300">Déposer</button>
-    </form>
-
-    <!-- Withdraw Form -->
-    <form action="{{ route('wallet.withdraw') }}" method="POST" class="p-4 bg-gray-100 rounded-lg shadow">
-        @csrf
-        <h2 class="text-xl font-semibold mb-4">Retirer des fonds</h2>
-
-        <label for="transaction_type" class="block mb-2 font-medium">Choisir le type de transaction:</label>
-        <select name="transaction_type" class="form-select mb-4 block w-full border border-gray-300 rounded-md p-2" required>
-            <option value="MTN">MTN MoMo</option>
-            <option value="Orange">Orange Money</option>
-        </select>
-
-        <label for="phone_number" class="block mb-2 font-medium">Numéro de téléphone (MTN ou Orange):</label>
-        <input type="text" name="phone_number" class="form-input mb-4 block w-full border border-gray-300 rounded-md p-2" required placeholder="Numéro de transaction">
-
-        <label for="amount" class="block mb-2 font-medium">Montant à retirer:</label>
-        <input type="number" name="amount" step="0.01" class="form-input mb-4 block w-full border border-gray-300 rounded-md p-2" required>
-
-        <button type="submit" class="w-full bg-red-500 text-white font-semibold py-2 rounded-md hover:bg-red-600 transition duration-300">Retirer</button>
-    </form>
-
-    <!-- Display Messages -->
-    @if(session('success'))
-        <p class="mt-4 text-green-500 font-semibold">{{ session('success') }}</p>
-    @endif
-    @if(session('error'))
-        <p class="mt-4 text-red-500 font-semibold">{{ session('error') }}</p>
-    @endif
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portefeuille - Transactions</title>
     <style>
-        :root {
-            --primary: #4361ee;
-            --primary-light: #4895ef;
-            --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --warning: #f8961e;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --gray: #6c757d;
-            --gray-light: #e9ecef;
-        }
-
+        /* Reset et Base */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background-color: #f5f7ff;
-            color: var(--dark);
+            background-color: #f5f7fa;
+            color: #333;
             line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .logo {
-        height: 70px;
-        transition: var(--transition);
-    }
-
-    .logo:hover {
-        transform: scale(1.05);
-    }
-
-
-        .main-header {
-        background: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        padding: 3px 0;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-    }
-
-    .header-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-
-        /* Header Styles */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
-            margin-bottom: 50px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 100%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
-            transform: rotate(30deg);
-        }
-
-        .logo img {
-            height: 40px;
-            transition: transform 0.3s ease;
-        }
-
-        .logo:hover img {
-            transform: scale(1.05);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .profile-pic {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid white;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .profile-pic:hover {
-            transform: scale(1.1);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .user-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            margin-left: 15px;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
-        .add-profile-link {
-            color: white;
-            font-size: 0.8rem;
-            margin-left: 5px;
-            text-decoration: underline;
-        }
-
-        /* Main Content */
-        .wallet-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            padding: 30px;
-            margin-bottom: 30px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .wallet-container:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
-
-        .wallet-title {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: var(--dark);
-            position: relative;
-            display: inline-block;
-        }
-
-        .wallet-title::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: var(--primary);
-            border-radius: 3px;
-        }
-
-        .balance {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            padding: 15px;
-            background: linear-gradient(135deg, #f5f7ff 0%, #e8ecff 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .balance-amount {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 1.8rem;
-        }
-
-        /* Transaction Forms */
-        .transaction-form {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid var(--gray-light);
-            transition: all 0.3s ease;
-        }
-
-        .transaction-form:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            border-color: rgba(67, 97, 238, 0.2);
-        }
-
-        .form-title {
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-title i {
-            color: var(--primary);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--dark);
-        }
-
-        select, input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--gray-light);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .deposit-btn {
-            background: linear-gradient(135deg, var(--success) 0%, #3a86ff 100%);
-            color: white;
-        }
-
-        .deposit-btn:hover {
-            background: linear-gradient(135deg, #3a86ff 0%, var(--success) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.4);
-        }
-
-        .withdraw-btn {
-            background: linear-gradient(135deg, var(--danger) 0%, #ff6d00 100%);
-            color: white;
-        }
-
-        .withdraw-btn:hover {
-            background: linear-gradient(135deg, #ff6d00 0%, var(--danger) 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
-        }
-
-        /* Messages */
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: 500;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .alert-success {
-            background-color: rgba(76, 201, 240, 0.1);
-            color: #00a8cc;
-            border-left: 4px solid #00a8cc;
-        }
-
-        .alert-error {
-            background-color: rgba(247, 37, 133, 0.1);
-            color: var(--danger);
-            border-left: 4px solid var(--danger);
         }
 
         /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -401,63 +31,385 @@
             100% { transform: scale(1); }
         }
 
-        .pulse {
-            animation: pulse 2s infinite;
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                text-align: center;
-                gap: 15px;
-            }
-
-            .user-info {
-                flex-direction: column;
-            }
-
-            .logout-btn {
-                margin-left: 0;
-                margin-top: 10px;
-            }
-
-            .wallet-title {
-                font-size: 1.5rem;
-            }
-
-            .balance {
-                font-size: 1.2rem;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .balance-amount {
-                font-size: 1.5rem;
-            }
+        @keyframes slideInRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Floating Elements */
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-
-        @keyframes floating {
+        @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
         }
 
+        /* Header */
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        .logo-container img {
+            height: 50px;
+            width: auto;
+            margin-right: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-container img:hover {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            animation: slideInRight 0.8s ease-out;
+        }
+
+        .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-image:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .user-name {
+            margin-left: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            margin-left: 1.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn i {
+            margin-right: 0.5rem;
+        }
+
+        /* Contenu Principal */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .balance {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            animation: pulse 2s infinite;
+        }
+
+        .balance span {
+            font-size: 1.6rem;
+            color: #4a5568;
+            font-weight: 700;
+        }
+
+        /* Formulaires */
+        .form-container {
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            animation: fadeIn 1.2s ease-out;
+        }
+
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-container h2 i {
+            margin-right: 0.8rem;
+            color: #667eea;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .deposit-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .deposit-btn:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(56, 161, 105, 0.3);
+        }
+
+        .withdraw-btn {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        .withdraw-btn:hover {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
+        }
+
+        /* Messages */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            color: #2f855a;
+            border-left: 4px solid #48bb78;
+        }
+
+        .alert-error {
+            background-color: #fff5f5;
+            color: #c53030;
+            border-left: 4px solid #f56565;
+        }
+
+        /* Icônes */
+        .icon {
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
 
-        .header-container {
-            padding: 0 15px;
-        }
+            .user-info {
+                margin-top: 1rem;
+                flex-direction: column;
+            }
 
-        .user-menu {
-            gap: 10px;
+            .user-name {
+                margin: 0.5rem 0;
+            }
+
+            .logout-btn {
+                margin: 0.5rem 0 0 0;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
         }
-    }
     </style>
-</div>
-@endsection
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header class="flex items-center justify-between bg-gray-100 p-4 rounded-lg shadow mb-6">
+        <!-- AZ Logo on the Left -->
+        <div class="logo-container" style="position: absolute; left: 20px;">
+            <a href="/client/dashboard"> 
+                <img src="{{ asset('AZ_fastlogo.png') }}" alt="Logo" class="h-10 w-auto mr-4">
+            </a>
+        </div>
+
+        <!-- User Info and Logout on the Right -->
+        <div class="user-info" onclick="location.href='{{ route('profile.edit') }}'">
+            <!-- Display Profile Picture -->
+            @if (auth()->user()->profileImage)
+                <img src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile Image" class="profile-image">
+            @else
+                <img src="{{ asset('jblogo.png') }}" alt="Default Profile Image" class="profile-image">
+                
+            @endif
+
+            <div class="user-name">{{ auth()->user()->name }}!</div>
+
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Votre portefeuille</h1>
+
+        <div class="balance">
+            Solde actuel: <span>{{ number_format($wallet->balance, 2) }} FCFA</span>
+        </div>
+
+        <!-- Deposit Form -->
+        <form action="{{ route('wallet.deposit') }}" method="POST" class="form-container">
+            @csrf
+            <h2><i class="fas fa-money-bill-wave"></i> Déposer des fonds</h2>
+
+            <label for="transaction_type">Choisir le type de transaction:</label>
+            <select name="transaction_type" required>
+                <option value="MTN">MTN MoMo</option>
+                <option value="Orange">Orange Money</option>
+            </select>
+
+            <label for="phone_number">Numéro de téléphone (MTN ou Orange):</label>
+            <input type="text" name="phone_number" required placeholder="Numéro de transaction">
+
+            <label for="amount">Montant à déposer:</label>
+            <input type="number" name="amount" step="0.01" required>
+
+            <button type="submit" class="deposit-btn">
+                <i class="fas fa-plus-circle icon"></i> Déposer
+            </button>
+        </form>
+
+        <!-- Withdraw Form -->
+        <form action="{{ route('wallet.withdraw') }}" method="POST" class="form-container">
+            @csrf
+            <h2><i class="fas fa-hand-holding-usd"></i> Retirer des fonds</h2>
+
+            <label for="transaction_type">Choisir le type de transaction:</label>
+            <select name="transaction_type" required>
+                <option value="MTN">MTN MoMo</option>
+                <option value="Orange">Orange Money</option>
+            </select>
+
+            <label for="phone_number">Numéro de téléphone (MTN ou Orange):</label>
+            <input type="text" name="phone_number" required placeholder="Numéro de transaction">
+
+            <label for="amount">Montant à retirer:</label>
+            <input type="number" name="amount" step="0.01" required>
+
+            <button type="submit" class="withdraw-btn">
+                <i class="fas fa-minus-circle icon"></i> Retirer
+            </button>
+        </form>
+
+        <!-- Display Messages -->
+        @if(session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+            </div>
+        @endif
+    </div>
+
+    <script>
+        // Animation supplémentaire au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            const forms = document.querySelectorAll('.form-container');
+            forms.forEach((form, index) => {
+                form.style.animationDelay = `${index * 0.2}s`;
+            });
+        });
+    </script>
+</body>
+</html>
