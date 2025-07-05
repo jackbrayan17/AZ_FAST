@@ -209,4 +209,20 @@ public function show(Product $product)
 
         return redirect()->route('products.index')->with('success', 'Product and associated images deleted successfully!');
     }
+
+
+     public function description(Product $product)
+    {
+        // Charge les relations nécessaires
+        $product->load('category', 'images', 'user', 'merchant');
+        
+        // Récupère les produits similaires (même catégorie)
+        $relatedProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->with('images')
+            ->take(4)
+            ->get();
+
+        return view('client.products.show', compact('product', 'relatedProducts'));
+    }
 }

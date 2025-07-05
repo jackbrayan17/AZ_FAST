@@ -19,11 +19,15 @@ class Merchant extends User
         return $this->belongsTo(User::class);
     }
     public function storefronts()
-{
-    return $this->hasMany(Storefront::class);
-}
-public function products()
-{
-    return $this->hasMany(Product::class);
-}
+    {
+        return $this->hasMany(Storefront::class);
+    }
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+    public function address()
+    {
+        return $this->hasOne(Address::class);
+    }
 }

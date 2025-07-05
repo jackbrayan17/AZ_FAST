@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Category;
 use App\Models\Address;
 use App\Models\Client;
 use App\Models\Merchant;
@@ -90,7 +91,8 @@ public function products()
     }
     public function showRegisterForm()
     {
-        return view('client.register'); // Assuming the form view is in 'resources/views/client/register.blade.php'
+        $categories = Category::all();
+        return view('client.register', compact('categories')); // Assuming the form view is in 'resources/views/client/register.blade.php'
     }
     public function clientOrder(){
         $client = auth()->user();
@@ -116,6 +118,8 @@ public function products()
             'phone' => 'required|string|max:15',
             'password' => 'required|string|min:4|confirmed',
             'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'interests' => 'required|array|min:1',
+            'interests.*' => 'exists:categories,id',
         ]);
 
         // Create the client (user) record
@@ -124,7 +128,8 @@ public function products()
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => $request->password,
-            'role' => 'client'
+            'role' => 'client',
+            'interests' => json_encode($request->interests) // Stocker les centres d'intérêt
         ]);
         $clients = Client::create([
             'user_id' => $client->id,
@@ -134,19 +139,23 @@ public function products()
             $file = $request->file('profile_image');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('uploads/profile_images', $fileName, 'public');
+
+            $client->profileImage()->create([
+                'image_path' => $filePath,
+            ]);
     
             // If user already has a profile image, update it
-            if ($user->profileImage) {
+            if ($client->profileImage) {
                 // Delete the previous image file if needed
-                Storage::disk('public')->delete($user->profileImage->image_path);
+                Storage::disk('public')->delete($client->profileImage->image_path);
     
                 // Update the existing image record
-                $user->profileImage->update([
+                $client->profileImage->update([
                     'image_path' => $filePath,
                 ]);
             } else {
                 // Create a new profile image if none exists
-                $user->profileImage()->create([
+                $client->profileImage()->create([
                     'image_path' => $filePath,
                 ]);
             }
@@ -207,5 +216,26 @@ public function products()
     }
     
     // Display the client dashboard after registration (optional)
+
+
+    public function productsByInterests()
+    {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        // Décoder les centres d'intérêt de l'utilisateur
+        $interests = json_decode($user->interests, true) ?? [];
+
+        // Récupérer les produits correspondant aux centres d'intérêt
+        $products = Product::whereIn('category_id', $interests)
+                        ->with('images')
+                        ->get();
+
+        return view('client.products.interests', compact('products'));
+    }
+
    
 }
