@@ -220,15 +220,15 @@
     </a>
             
     <div class="user-menu" onclick="location.href='{{ route('client.profile') }}'" style="border-radius: 50%; overflow: hidden; width: 40px; height: 40px; cursor: pointer;">
-        @if (auth()->user()->profileImage)
-            <a href="{{ route('client.profile') }}">
-                <img style=""  src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile" class="profile-img">
-            </a>
+        @auth
+            @if(auth()->user()->profileImage)
+                <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ asset('storage/' . auth()->user()->profileImage->image_path) }}" alt="Profile" class="profile-img">
+            @else
+                <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ asset('jblogo.png') }}" alt="Profile" class="profile-img">
+            @endif
         @else
-            <a href="{{ route('client.profile') }}">
-                <img src="{{ asset('jblogo.png') }}" alt="Profile" class="profile-img">
-            </a>
-        @endif
+            <img style="width: 100%; height: 100%; object-fit: cover;" src="{{ asset('jblogo.png') }}" alt="Profile" class="profile-img">
+        @endauth
     </div>
 </nav>
 
